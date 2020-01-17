@@ -1,16 +1,19 @@
+import { ORDER_TYPES, SECONDS_IN_A_DAY } from '@augurproject/sdk';
+import { MarketReportingState } from '@augurproject/sdk/build/constants';
+import { DB } from '@augurproject/sdk/build/state/db/DB';
 import { API } from '@augurproject/sdk/build/state/getter/API';
 import {
   GetMarketsSortBy,
   MarketList,
 } from '@augurproject/sdk/build/state/getter/Markets';
-import { DB } from '@augurproject/sdk/build/state/db/DB';
-import { MarketReportingState } from '@augurproject/sdk/build/constants';
 import { ACCOUNTS, ContractAPI } from '@augurproject/tools';
-import { BigNumber } from 'bignumber.js';
-import { ORDER_TYPES, SECONDS_IN_A_DAY } from '@augurproject/sdk';
-import * as _ from 'lodash';
 import { TestEthersProvider } from '@augurproject/tools/build/libs/TestEthersProvider';
-import { NULL_ADDRESS, stringTo32ByteHex } from '@augurproject/tools/build/libs/Utils';
+import {
+  NULL_ADDRESS,
+  stringTo32ByteHex,
+} from '@augurproject/tools/build/libs/Utils';
+import { BigNumber } from 'bignumber.js';
+import * as _ from 'lodash';
 import {
   _beforeAll,
   _beforeEach,

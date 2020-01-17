@@ -1,8 +1,13 @@
-import { makeDbMock, makeProvider } from "../../../libs";
-import { ContractAPI, ACCOUNTS, loadSeedFile, defaultSeedPath } from "@augurproject/tools";
 import { DB } from '@augurproject/sdk/build/state/db/DB';
-import { BigNumber } from 'bignumber.js';
+import {
+  ACCOUNTS,
+  ContractAPI,
+  defaultSeedPath,
+  loadSeedFile,
+} from '@augurproject/tools';
 import { stringTo32ByteHex } from '@augurproject/tools/build/libs/Utils';
+import { BigNumber } from 'bignumber.js';
+import { makeDbMock, makeProvider } from '../../../libs';
 
 const mock = makeDbMock();
 

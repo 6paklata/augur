@@ -1,12 +1,15 @@
-import { makeDbMock, makeProvider } from "../../../libs";
-import { ContractAPI, ACCOUNTS, loadSeedFile, defaultSeedPath } from "@augurproject/tools";
 import { DB } from '@augurproject/sdk/build/state/db/DB';
 import { API } from '@augurproject/sdk/build/state/getter/API';
-import { BigNumber } from 'bignumber.js';
-import { stringTo32ByteHex } from '@augurproject/tools/build/libs/Utils';
+import { MarketLiquidityRanking } from '@augurproject/sdk/build/state/getter/Liquidity';
 import {
-    MarketLiquidityRanking,
-} from '@augurproject/sdk/build/state/getter/Liquidity';
+  ACCOUNTS,
+  ContractAPI,
+  defaultSeedPath,
+  loadSeedFile,
+} from '@augurproject/tools';
+import { stringTo32ByteHex } from '@augurproject/tools/build/libs/Utils';
+import { BigNumber } from 'bignumber.js';
+import { makeDbMock, makeProvider } from '../../../libs';
 
 const mock = makeDbMock();
 
