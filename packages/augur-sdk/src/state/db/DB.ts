@@ -49,6 +49,7 @@ import {
 } from '../logs/types';
 import { ZeroXOrders, StoredOrder } from './ZeroXOrders';
 import { CancelledOrdersDB } from './CancelledOrdersDB';
+import { BigNumber } from "bignumber.js";
 
 interface Schemas {
   [table: string]: string;
@@ -72,6 +73,7 @@ export class DB {
   private zeroXOrders: ZeroXOrders;
   private blockAndLogStreamerListener: BlockAndLogStreamerListenerInterface;
   private augur: Augur;
+  private highestAvailableBlockNumber: number;
   readonly dexieDB: Dexie;
   syncStatus: SyncStatus;
 
@@ -233,7 +235,7 @@ export class DB {
    */
   async sync(augur: Augur, chunkSize: number, blockstreamDelay: number): Promise<void> {
     const dbSyncPromises = [];
-    const highestAvailableBlockNumber = await augur.provider.getBlockNumber();
+    this.highestAvailableBlockNumber = await augur.provider.getBlockNumber();
 
     console.log('Syncing generic log DBs');
     for (const genericEventDBDescription of this.genericEventDBDescriptions) {
@@ -243,7 +245,7 @@ export class DB {
           augur,
           chunkSize,
           blockstreamDelay,
-          highestAvailableBlockNumber
+          this.highestAvailableBlockNumber
         )
       );
     }
@@ -253,12 +255,12 @@ export class DB {
     // Derived DBs are synced after generic log DBs complete
     console.log('Syncing derived DBs');
 
-    await this.disputeDatabase.sync(highestAvailableBlockNumber);
-    await this.currentOrdersDatabase.sync(highestAvailableBlockNumber);
-    await this.cancelledOrdersDatabase.sync(highestAvailableBlockNumber);
+    await this.disputeDatabase.sync(this.highestAvailableBlockNumber);
+    await this.currentOrdersDatabase.sync(this.highestAvailableBlockNumber);
+    await this.cancelledOrdersDatabase.sync(this.highestAvailableBlockNumber);
 
     // The Market DB syncs after the derived DBs, as it depends on a derived DB
-    await this.marketDatabase.sync(highestAvailableBlockNumber);
+    await this.marketDatabase.sync(this.highestAvailableBlockNumber);
 
     // Update LiquidityDatabase and set it to update whenever there's a new block
     //await this.liquidityDatabase.updateLiquidity(augur, this, (await augur.getTimestamp()).toNumber());
@@ -314,7 +316,7 @@ export class DB {
 
     // TODO Figure out a way to handle concurrent request limit of 40
     await Promise.all(dbRollbackPromises).catch(error => { throw error; });
-  }
+  };
 
   /**
    * Adds a new block to a SyncableDB/UserSyncableDB and updates MetaDB.
@@ -330,11 +332,13 @@ export class DB {
       throw new Error('Unknown DB name: ' + dbName);
     }
     try {
-      await db.addNewBlock(blockLogs[0].blockNumber, blockLogs);
+      const blockNumber = blockLogs[0].blockNumber;
+      await db.addNewBlock(blockNumber, blockLogs);
+      this.highestAvailableBlockNumber = blockNumber;
 
       const highestSyncBlock = await this.syncStatus.getHighestSyncBlock(dbName);
-      if (highestSyncBlock !== blockLogs[0].blockNumber) {
-        throw new Error('Highest sync block is ' + highestSyncBlock + '; newest block number is ' + blockLogs[0].blockNumber);
+      if (highestSyncBlock !== blockNumber) {
+        throw new Error('Highest sync block is ' + highestSyncBlock + '; newest block number is ' + blockNumber);
       }
     } catch (err) {
       throw err;
@@ -358,6 +362,17 @@ export class DB {
     }
 
     return table.count();
+  }
+
+  private lastTimestamp: {block?: number, timestamp?: BigNumber} = {};
+  async getTimestamp(): Promise<BigNumber> {
+    const block = this.highestAvailableBlockNumber;
+
+    if (this.lastTimestamp.block !== block) {
+      const timestamp = await this.augur.getTimestamp();
+      this.lastTimestamp = { block, timestamp };
+    }
+    return this.lastTimestamp.timestamp;
   }
 
   get CompleteSetsPurchased() { return this.dexieDB['CompleteSetsPurchased'] as Dexie.Table<CompleteSetsPurchasedLog, any>; }
