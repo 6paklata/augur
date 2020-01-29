@@ -90,7 +90,7 @@ describe('WarpController', () => {
       await provider.getBlock(170),
     );
 
-    await bulkSyncStrategy.start(171, await provider.getBlockNumber());
+    await bulkSyncStrategy.start(170, await provider.getBlockNumber());
 
     secondCheckpointFileHash = await warpController.createAllCheckpoints(
       newBlockHeaders,
@@ -452,6 +452,18 @@ describe('WarpController', () => {
       test('should populate market data', async () => {
         // populate db.
         await warpSyncStrategy.start(secondCheckpointFileHash);
+
+
+        await db.rollback(176);
+        const johnMarketList = await johnApi.route('getMarkets', {
+          universe: addresses.Universe,
+        });
+
+        await expect(
+          newJohnApi.route('getMarkets', {
+            universe: addresses.Universe,
+          }),
+        ).resolves.toEqual(johnMarketList);
       });
     });
 
@@ -465,8 +477,7 @@ describe('WarpController', () => {
           firstCheckpointBlockHeaders,
         );
 
-        await db.rollback(blockNumber - 10);
-        await bulkSyncStrategy.start(blockNumber - 10, blockNumber);
+        await db.rollback(blockNumber + 1);
         const johnMarketList = await johnApi.route('getMarkets', {
           universe: addresses.Universe,
         });
@@ -484,7 +495,7 @@ describe('WarpController', () => {
         );
 
         await db.rollback(blockNumber - 10);
-        await bulkSyncStrategy.start(blockNumber - 10, blockNumber);
+        await bulkSyncStrategy.start(blockNumber - 10, blockNumber + 1);
 
         const rolledbackJohnMarketList = await johnApi.route('getMarkets', {
           universe: addresses.Universe,
