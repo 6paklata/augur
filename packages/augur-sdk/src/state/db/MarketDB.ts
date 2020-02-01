@@ -104,6 +104,8 @@ export class MarketDB extends DerivedDB {
     const ETHInAttoDAI = new BigNumber(200).multipliedBy(10**18);
 
     for (const marketId of marketIds) {
+      // Skip for markets we haven't loaded yet.
+      if(!marketDataById[marketId]) continue;
       const doc = await this.getOrderBookData(this.augur, marketId, marketDataById[marketId], reportingFeeDivisor, ETHInAttoDAI);
       // This is needed to make rollbacks work properly
       doc['blockNumber'] = highestBlockNumber;
